@@ -16,13 +16,6 @@ use serenity::{
     },
     http::Http,
 };
-use tracing::info;
-
-//can't get this to work rn due to conflicts with rust's built-in format macro so disabling for now
-//use fstrings::{
-//    f,
-//    format_args_f,
-//};
 
 #[group]
 #[commands(ching)]
@@ -32,7 +25,6 @@ struct Handler;
 impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("connected to Discord as {}", ready.user.name);
-        info!("Connected as {}", ready.user.name);
         use serenity::model::gateway::Activity;
         use serenity::model::user::OnlineStatus;
 
@@ -43,7 +35,7 @@ impl EventHandler for Handler {
     }
 
     async fn resume(&self, _: Context, _: ResumedEvent) {
-        //info!("Resumed");
+        println!("Resumed");
     }
     async fn guild_member_addition(&self, _ctx: Context, _guild_id: serenity::model::id::GuildId, mut _new_member: serenity::model::guild::Member) {
         println!("{name} has joined", name=&_new_member.user.name);
@@ -66,7 +58,7 @@ async fn main() {
         .configure(|c| {
             c.prefix("`") // set the bot's prefix to "`"
             .on_mention(Some(bot_id))
-            //.owners(vec![UserId(386699245240975371)].into_iter().collect()))
+            .owners(vec![UserId(386699245240975371)].into_iter().collect()))
             .allow_dm(true)
             .case_insensitivity(false)
             .no_dm_prefix(true)
@@ -84,7 +76,7 @@ async fn main() {
     if let Err(why) = client.start().await {
         println!("An error occurred while running the client: {:?}", why);
     }
-    //smartstring::validate();
+
     let _slurs_to_track: Vec<&str> = vec!["nigger", "kike", "coon", "spic", "chink", "faggot", "tranny"];
 }
 
