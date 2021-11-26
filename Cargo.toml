@@ -1,0 +1,13 @@
+[package]
+name = "slur_counter_bot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serenity = "0.10.9"
+tokio = {version = "1.14.0",  features = ["macros", "rt-multi-thread"]}
+tracing = "0.1.29"
+smartstring = "0.2.9"
+fstrings = "0.2.3"
