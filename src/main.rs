@@ -58,7 +58,7 @@ async fn main() {
         .configure(|c| {
             c.prefix("`") // set the bot's prefix to "`"
             .on_mention(Some(bot_id))
-            .owners(vec![UserId(386699245240975371)].into_iter().collect()))
+            .owners(vec![UserId(386699245240975371)].into_iter().collect())
             .allow_dm(true)
             .case_insensitivity(false)
             .no_dm_prefix(true)
