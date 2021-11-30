@@ -13,3 +13,4 @@ tokio = {version = "1.14.0",  features = ["macros", "rt-multi-thread"]}
 #fstrings = "0.2.3"
 strum = "0.23"
 strum_macros = "0.23"
+serde = { version = "1.0"}

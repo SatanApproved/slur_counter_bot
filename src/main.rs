@@ -1,12 +1,6 @@
-use std::{
-    collections::{
-        HashMap
-    },
-    env,
-     sync::{
+use std::{collections::{HashMap, hash_map::RandomState}, env, thread, time::{self, Duration}, sync::{
          Arc
-    }
-};
+    }};
 
 use serenity::{async_trait, client::{Client, Context, EventHandler,bridge::gateway::GatewayIntents, validate_token}, framework::standard::{
         StandardFramework,
@@ -21,6 +15,7 @@ use strum::IntoEnumIterator;
 
 use strum_macros::EnumIter;
 
+use serde::{Serialize, Deserialize};
 
 #[group]
 #[commands(ching)]
@@ -37,6 +32,7 @@ impl EventHandler for Handler {
         let status = OnlineStatus::Online;
 
         ctx.set_presence(Some(activity), status).await;//TODO: maybe make status cycle (should check Discord's status update ratelimit first)
+        try_load_database(ctx);//TODO: potentially extract the parts of ctx we care about and pass just that around
     }
 
     async fn resume(&self, _: Context, _: ResumedEvent) {
@@ -164,4 +160,36 @@ struct SlurCountStruct {
 }
 impl TypeMapKey for SlurCountStruct {
     type Value = Arc<RwLock<HashMap<User, SlurCountStruct>>>;
+}
+
+pub fn hacky_backup(ctx: Context) {
+    let _ = thread::spawn(move || {
+        const TIME_BETWEEN_BACKUPS: Duration = Duration::from_millis(10*1_000*60);
+        let mut then;
+        let mut now;
+        loop {
+            then = time::Instant::now();
+            hacky_backup_real(&ctx);
+            now = time::Instant::now();
+            //if previous backup took longer to finish than the time between backups, log a warning
+            if now - then > TIME_BETWEEN_BACKUPS {
+                eprintln!("warning: previous backup was {:?} seconds behind schedule", (now - then - TIME_BETWEEN_BACKUPS) / 100);
+                continue;
+            }
+            thread::sleep(TIME_BETWEEN_BACKUPS - (now - then));
+        }
+    });
+}
+pub fn hacky_backup_real(ctx: &Context) {
+    //writes the current data in the active database to local storage in order to preserve it between shutdowns
+    todo!();
+}
+type TypeDBT = Arc<RwLock<HashMap<User, SlurCountStruct, RandomState>>>;
+//TODO: implement Serialize and Deserialize manually on DBT so I can load it to and from the database file
+struct DBT(TypeDBT);
+
+fn try_load_database(ctx: Context) {
+    //checks if a database file exists, and loads it into the global active hashmap if it does
+    //TODO: actually write this
+    hacky_backup(ctx);//still passing the Context around...
 }

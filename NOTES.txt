@@ -1,1 +1,37 @@
 slurs to track: Nigger, kike, coon, spic, chink, faggot, tranny
+
+
+manual hard reload:
+
+SA server -> get vec of channels : 
+    -> iterate over them
+    -> filter through only text channels
+    -> foreach iterate over all messages
+        filter accordingly
+
+
+```rs 
+#
+enum slurs {
+    NIGGER,
+    KIKE,
+    COON,
+    SPIC,
+    CHINK,
+    FAGGOT,
+    TRANNY
+}
+struct slur_struct {
+    nigger: ()
+    kike:
+    coon:
+    spic:
+    spic:
+    chink:
+    faggot:
+    tranny:
+}
+fn get_slur_count(u: User,..) -> slur_struct {
+
+}
+```
