@@ -1,21 +1,26 @@
 use std::{
+    collections::{
+        HashMap
+    },
     env,
+     sync::{
+         Arc
+    }
 };
 
-use serenity::{
-    async_trait,
-    client::{Client, Context, EventHandler,bridge::gateway::GatewayIntents, validate_token},
-    model::{channel::Message, prelude::*},
-    framework::standard::{
+use serenity::{async_trait, client::{Client, Context, EventHandler,bridge::gateway::GatewayIntents, validate_token}, framework::standard::{
         StandardFramework,
         CommandResult,
         macros::{
             command,
             group
         }
-    },
-    http::Http,
-};
+    }, http::Http, model::{channel::Message, prelude::*}, prelude::{RwLock, TypeMapKey}};
+
+use strum::IntoEnumIterator;
+
+use strum_macros::EnumIter;
+
 
 #[group]
 #[commands(ching)]
@@ -37,8 +42,46 @@ impl EventHandler for Handler {
     async fn resume(&self, _: Context, _: ResumedEvent) {
         println!("Resumed");
     }
+
     async fn guild_member_addition(&self, _ctx: Context, _guild_id: serenity::model::id::GuildId, mut _new_member: serenity::model::guild::Member) {
         println!("{name} has joined", name=&_new_member.user.name);
+    }
+    
+    async fn message(&self, ctx: Context, msg: Message) {
+        for variant in Slurs::iter() {
+            if msg.content.contains(variant.to_str()) {
+                //ensure that ctx.data's HashMap<User, SlurCountStruct> contains this user
+                let count = msg.content.matches(variant.to_str()).count();
+                let mut scs;
+                match ctx.data.read().await.get::<SlurCountStruct>().expect("expected to find a SlurCountStruct in ctx.data").read().await.get(&msg.author) {
+                    None => {
+                        scs = SlurCountStruct::default();
+                        match variant {
+                            Slurs::NIGGER => scs.nigger = count,
+                            Slurs::KIKE => scs.kike = count,
+                            Slurs::COON => scs.coon = count,
+                            Slurs::SPIC => scs.spic = count,
+                            Slurs::CHINK => scs.chink = count,
+                            Slurs::FAGGOT => scs.faggot = count,
+                            Slurs::TRANNY => scs.tranny = count,
+                        }
+                    },
+                    Some(s) => {
+                        scs = s.clone();
+                        match variant {
+                            Slurs::NIGGER => scs.nigger += count,
+                            Slurs::KIKE => scs.kike += count,
+                            Slurs::COON => scs.coon += count,
+                            Slurs::SPIC => scs.spic += count,
+                            Slurs::CHINK => scs.chink += count,
+                            Slurs::FAGGOT => scs.faggot += count,
+                            Slurs::TRANNY => scs.tranny += count,
+                        }
+                    }
+                }
+                ctx.data.write().await.get::<SlurCountStruct>().expect("expected to find a SlurCountStruct in ctx.data").write().await.insert(msg.author.clone(), scs);
+            }
+        }
     }
 }
 
@@ -76,8 +119,6 @@ async fn main() {
     if let Err(why) = client.start().await {
         println!("An error occurred while running the client: {:?}", why);
     }
-
-    let _slurs_to_track: Vec<&str> = vec!["nigger", "kike", "coon", "spic", "chink", "faggot", "tranny"];
 }
 
 #[command]
@@ -86,4 +127,41 @@ async fn ching(ctx: &Context, msg: &Message) -> CommandResult {
     msg.reply(ctx, "chong!").await?;
 
     Ok(())
+}
+#[non_exhaustive]
+#[derive(EnumIter)]
+enum Slurs {
+    NIGGER,
+    KIKE,
+    COON,
+    SPIC,
+    CHINK,
+    FAGGOT,
+    TRANNY,
+}
+impl Slurs {
+    fn to_str(&self) -> &str {
+        match self {
+            Self::NIGGER => "nigger",
+            Self::KIKE => "kike",
+            Self::COON => "coon",
+            Self::SPIC => "spic",
+            Self::CHINK => "chink",
+            Self::FAGGOT => "faggot",
+            Self::TRANNY => "tranny",
+        }
+    }
+}
+#[derive(Default, Clone)]
+struct SlurCountStruct {
+    nigger: usize,
+    kike: usize,
+    coon: usize,
+    spic: usize,
+    chink: usize,
+    faggot: usize,
+    tranny: usize,
+}
+impl TypeMapKey for SlurCountStruct {
+    type Value = Arc<RwLock<HashMap<User, SlurCountStruct>>>;
 }
